@@ -37,7 +37,7 @@ class CPU:
             print(f"must be in this format: {sys.argv[0]} filename")
             sys.exit(1)
         try:
-            with open(f"examples/{sys.argv[1]}") as f:
+            with open(f"{sys.argv[1]}") as f:
                 for line in f:
                     byte = line.split('#',1)[0].strip()
                     if byte == '':
@@ -72,7 +72,9 @@ class CPU:
         value = self.reg[operand_a]
         self.ram[self.reg[self.sp]] = value
 
-        
+    def compare(self, addr_a, addr_b):
+        if self.reg[addr_a] == self.reg[addr_b]:
+            E = 0b1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -120,6 +122,11 @@ class CPU:
         CALL              = 0b01010000
         RETURN            = 0b00010001
         ADD               = 0b10100000
+        CMP               = 0b10100111
+        JEQ               = 0b01010101
+        JNE               = 0b01010110
+        E                 = 0b00000000
+        JMP               = 0b01010100
         self.reg[self.sp] = 0b11110100  #F4
                
         while self.running:
@@ -129,30 +136,31 @@ class CPU:
             # print(IR)
             
             if IR == LDI:
-                # print('entered LDI')
+                print('entered LDI')
                 self.ram_write(operand_a,operand_b)
                 self.pc +=3
             
             elif IR == PRN:
-                # print('print')
+                print('print')
                 print(self.ram_read(operand_a))
                 self.pc+=2
             
             elif IR == HLT:
-                # print('HLT')
+                print('HLT')
                 self.h()
             
             elif IR == MUL:
-                
+                print('mul')
                 self.alu('MUL',operand_a,operand_b)
                 self.pc+=3
             
             elif IR == PUSH:
+                print('push')
                 self.push()
                 self.pc +=2
 
             elif IR == POP:
-                
+                print('pop')
                 value = self.ram[self.reg[self.sp]]
                 self.reg[operand_a] = value
                 self.reg[self.sp] += 1
@@ -167,16 +175,38 @@ class CPU:
                 self.pc = subroutine_address 
 
             elif IR == RETURN:
+                print('return')
                 return_address = self.ram[self.reg[self.sp]]
                 self.reg[self.sp] += 1
                 self.pc = return_address
 
             elif IR == ADD:
-                
+                print('add')
                 self.alu('ADD',operand_a,operand_b)
                 self.pc += 3
 
+            elif IR == CMP:
+                print('CMP')
+                self.compare(operand_a,operand_b)
+                self.pc += 3
 
+            elif IR == JNE:
+                print('JNE')
+                if E == 0b0:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+
+            elif IR == JEQ:
+                print('JEQ')
+                if E == 0b1:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+
+            elif IR == JMP:
+                print('jmp')
+                self.pc = self.reg[operand_a] 
 
 
             else:
