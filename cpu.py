@@ -12,6 +12,7 @@ class CPU:
         self.running = True
         self.reg     = [0] * 8 #8 registers
         self.sp      = 7
+        self.E       = False
 
     def load(self):
         """Load a program into memory."""
@@ -73,8 +74,13 @@ class CPU:
         self.ram[self.reg[self.sp]] = value
 
     def compare(self, addr_a, addr_b):
+        # print('compare function:')
+        # print(self.reg[addr_a])
+        # print(self.reg[addr_b])
         if self.reg[addr_a] == self.reg[addr_b]:
-            E = 0b1
+            self.E = True
+        else:
+            self.E = False
 
 
     def alu(self, op, reg_a, reg_b):
@@ -125,7 +131,7 @@ class CPU:
         CMP               = 0b10100111
         JEQ               = 0b01010101
         JNE               = 0b01010110
-        E                 = 0b00000000
+        
         JMP               = 0b01010100
         self.reg[self.sp] = 0b11110100  #F4
                
@@ -136,38 +142,40 @@ class CPU:
             # print(IR)
             
             if IR == LDI:
-                print('entered LDI')
+                # print('entered LDI')
+                
                 self.ram_write(operand_a,operand_b)
+                # print(self.reg[operand_a])
                 self.pc +=3
             
             elif IR == PRN:
-                print('print')
+                # print('print')
                 print(self.ram_read(operand_a))
                 self.pc+=2
             
             elif IR == HLT:
-                print('HLT')
+                # print('HLT')
                 self.h()
             
             elif IR == MUL:
-                print('mul')
+                # print('mul')
                 self.alu('MUL',operand_a,operand_b)
                 self.pc+=3
             
             elif IR == PUSH:
-                print('push')
+                # print('push')
                 self.push()
                 self.pc +=2
 
             elif IR == POP:
-                print('pop')
+                # print('pop')
                 value = self.ram[self.reg[self.sp]]
                 self.reg[operand_a] = value
                 self.reg[self.sp] += 1
                 self.pc += 2
 
             elif IR == CALL:
-                print('inside call')
+                # print('inside call')
                 ret_address = self.pc + 2
                 self.reg[self.sp] -= 1
                 self.ram[self.reg[self.sp]] = ret_address
@@ -175,42 +183,51 @@ class CPU:
                 self.pc = subroutine_address 
 
             elif IR == RETURN:
-                print('return')
+                # print('return')
                 return_address = self.ram[self.reg[self.sp]]
                 self.reg[self.sp] += 1
                 self.pc = return_address
 
             elif IR == ADD:
-                print('add')
+                # print('add')
                 self.alu('ADD',operand_a,operand_b)
                 self.pc += 3
 
             elif IR == CMP:
-                print('CMP')
+                # print('CMP')
                 self.compare(operand_a,operand_b)
+                # print(self.reg[operand_a])
+                # print(self.reg[operand_b])
                 self.pc += 3
 
             elif IR == JNE:
-                print('JNE')
-                if E == 0b0:
+                # print('JNE')
+                if self.E == False:
+                    # print('JNE == true')
+                    # print('jne',self.reg[operand_a])
                     self.pc = self.reg[operand_a]
                 else:
+                    # print('JNE == not rue')
                     self.pc += 2
 
             elif IR == JEQ:
-                print('JEQ')
-                if E == 0b1:
+                # print('JEQ')
+                # print('E', self.E)
+                if self.E == True:
+                    # print('jeq',self.reg[operand_a])
+                    # print('JEQ == true')
                     self.pc = self.reg[operand_a]
                 else:
+                    # print('JEQ == not rue')
                     self.pc += 2
 
             elif IR == JMP:
-                print('jmp')
+                # print('jmp')
                 self.pc = self.reg[operand_a] 
 
 
             else:
-                print('command not supported')
+                # print('command not supported')
                 self.h()
 
 
